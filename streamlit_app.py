@@ -24,7 +24,7 @@ st.title("Explorador de operación")
 st.caption("Aplicación inicial para explorar resultados por área y región.")
 
 # TODO OBLIGATORIO: escribe tu nombre completo.
-st.write("**Desarrollado por:** Escribe aquí tu nombre")
+st.write("**Desarrollado por:** Pedro Fernando Ramírez Amador")
 
 st.sidebar.header("Filtros")
 
@@ -35,30 +35,55 @@ areas_seleccionadas = st.sidebar.multiselect(
     default=areas_disponibles,
 )
 
-df_filtrado = df[df["Área"].isin(areas_seleccionadas)].copy()
+regiones_disponibles = sorted(df["Región"].unique())
 
-st.subheader("Datos disponibles")
-st.dataframe(df_filtrado, width="stretch", hide_index=True)
-
-casos_por_fecha = (
-    df_filtrado.groupby("Fecha", as_index=False)["Casos"]
-    .sum()
-    .sort_values("Fecha")
+regiones_seleccionadas = st.sidebar.multiselect(
+    "Región",
+    options=regiones_disponibles,
+    default=regiones_disponibles,
 )
 
-fig = px.line(
-    casos_por_fecha,
-    x="Fecha",
-    y="Casos",
-    markers=True,
-    title="Casos por fecha",
-)
-st.plotly_chart(fig, width="stretch")
+df_filtrado = df[
+    df["Área"].isin(areas_seleccionadas)
+    & df["Región"].isin(regiones_seleccionadas)
+].copy()
 
-st.info(
-    "Esta es la versión inicial. Selecciona una opción de la actividad y agrega "
-    "una mejora funcional para el usuario."
-)
+tab1, tab2 = st.tabs(["Resumen ejecutivo", "Datos disponibles"])
+
+with tab1:
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.metric(
+            "Total de casos",
+            df_filtrado["Casos"].sum()
+        )
+
+    with col2:
+        st.metric(
+            "Satisfacción promedio",
+            f"{df_filtrado['Satisfacción'].mean():.2f}"
+        )
+
+    casos_por_fecha = (
+        df_filtrado.groupby("Fecha", as_index=False)["Casos"]
+        .sum()
+        .sort_values("Fecha")
+    )
+
+    fig = px.line(
+        casos_por_fecha,
+        x="Fecha",
+        y="Casos",
+        markers=True,
+        title="Casos por fecha",
+    )
+    st.plotly_chart(fig, width="stretch")
+
+with tab2:
+    st.subheader("Datos disponibles")
+    st.dataframe(df_filtrado, width="stretch", hide_index=True)
+
 
 
 # ================================================================
